@@ -7,11 +7,14 @@ const {
   modifyUserInfo,
   deleteUser,
   userSingout,
-  getUserAuth
+  getUserAuth,
+  setEmail
 } = require("../controllers/user.js")
 const { auth } = require("../middlewares/auth")
 
 router.post('/register', userRegister);
+
+router.post('/setEmail',auth , setEmail);
 
 router.post('/login', userLogin);
 

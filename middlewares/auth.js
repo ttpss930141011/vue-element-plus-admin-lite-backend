@@ -5,22 +5,24 @@ const auth = async (req, res, next) => {
   try {
     const { result, isValid } = verify(token);
     if (!isValid) {
-      resingin()
-    }
-    const { isExit, isAdmin } = await checkUserAuth(result);
-    if (isExit && isAdmin) {
+      resignin()
+    }{
       next()
-    } else {
-      resingin()
     }
+    // const { isExit, isAdmin } = await checkUserAuth(result);
+    // if (isExit && isAdmin) {
+    //   next()
+    // } else {
+    //   resignin()
+    // }
   } catch (error) {
     console.log(error)
-    resingin()
+    resignin()
   }
-  function resingin() {
-    res.render("resingin", {
+  function resignin() {
+    res.render("resignin", {
       data: JSON.stringify({
-        "needReSingin": true,
+        "needReSignin": true,
         message: "需要重新登录"
       })
     })

@@ -7,16 +7,16 @@ const { encode } = require("../utils/encryptTool/encrypt.js")
  * @param  { username, password, email }
  * @returns { Boolean }  
  */
-const signup = async ({ username, password, email }) => {
+const signup = async ({ account, password }) => {
   const encodePassword = await encode(password)
   // 创建一个实例调用save方法，讲数据存入到数据库中
   const users = new Users({
-    username,
-    password: encodePassword,
-    email,
+    account,
+    password: encodePassword
   })
   users.save().then((product) => {
-    console.log(product);
+    // console.log(product);
+    // console.log('signup ok')
     return true
   }).catch((err) => {
     console.log("err" + err);
@@ -29,11 +29,15 @@ const signup = async ({ username, password, email }) => {
  * @param String  
  * @returns { Boolean } 
  */
-const isExit = async (account) => Users.findOne({ account: account })
+const isExit = async (account) => {
+  return !!await Users.findOne({ account: account })
+}
 
 const getPwdByAccount = async (account) => {
   return await Users.findOne({ account: account }).exec();
 }
+
+const updateEmailByAccount = async (account,email) => await Users.updateOne({account:account},{$set: {email: email}})
 
 const findList = async (n = 0) => Users.find({}, { _id: 1, password: 0, __v: 0, isAdmin: 0 }).sort({ _id: -1 }).skip(n)
 
@@ -84,5 +88,6 @@ module.exports = {
   findList,
   modifyUserInfoById,
   deleteUserById,
-  checkUserAuth
+  checkUserAuth,
+  updateEmailByAccount
 }

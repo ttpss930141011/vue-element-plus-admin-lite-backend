@@ -15,9 +15,10 @@ db.once('open', () => console.log("连接成功"));
 
 // 定义Schema 相当于定义了一个集合（表）的字段名
 const userSchema = mongoose.Schema({
-  username: String,
+  account : String,
+  username: { type: String, default: '' },
   password: String,
-  email: String,
+  email: { type: String, default: '' },
   createdTime: { type: Date, default: Date.now },
   isAdmin: { type: Boolean, default: false }
 });

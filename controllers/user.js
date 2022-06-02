@@ -5,7 +5,8 @@ const {
   findList,
   modifyUserInfoById,
   deleteUserById,
-  checkUserAuth
+  checkUserAuth,
+  updateEmailByAccount
 } = require("../models/users.js")
 const dateFormat = require("../utils/format/date")
 const { checkPassword } = require("../utils/encryptTool/encrypt.js")
@@ -15,32 +16,33 @@ const { sign } = require("../utils/token.js")
  * 
  */
 const userRegister = async (req, res, next) => {
-  let { username, password, email } = req.body
-  const isAlreadyExit = !! await isExit(username, email)
-  console.log(`${username}:是否存在 ${isAlreadyExit} `);
+  let { account, password } = req.body
+  const isAlreadyExit = !! await isExit(account)
+  console.log(`${account}:是否存在 ${isAlreadyExit} `);
   // 用户名存在
   if (isAlreadyExit) {
-    // res.setHeader("content-type", "application/json;charset='utf8'")
+    res.setHeader("content-type", "application/json;charset='utf8'")
     res.render("errorSignup", {
-      message: JSON.stringify("username has exitted"),
       data: JSON.stringify({
         isExit: isAlreadyExit,
         date: dateFormat(),
-        message: JSON.stringify("username has exitted"),
+        message: JSON.stringify("account has exitted"),
       })
     })
   } else {
     // 将密码加密存到数据库中
     console.log(password);
-    if (!password || !password.length) password = "admin"
-    let isSuccess = await signup({ username, password, email })
-    console.log(`${username}:是否保存成功 ${isSuccess} `);
-    // res.setHeader("content-type", "application/json;charset='utf8'")
+    let isSuccess = await signup({ account, password })
+    const token = sign(account);
+    console.log(`${account}:是否保存成功 ${isSuccess} `);
+    res.setHeader("X-Token", token);
+    res.setHeader("content-type", "application/json;charset='utf8'")
     res.render("success", {
       data: JSON.stringify({
-        message: `用户${username}已注册成功`,
-        date: dateFormat(),
-        isExit: isAlreadyExit,
+        message: `用户${account}已注册成功`,
+        token: token,
+        name: account,
+        date: dateFormat()
       })
     })
   }
@@ -60,7 +62,7 @@ const userLogin = async (req, res, next) => {
   try {
     isAlreadyExit = await isExit(account);
   } catch (error) {
-    sendMsg()
+    sendMsg('isExit function occured error!')
   }
   // 用户名存在，则匹配账号密码
   if (isAlreadyExit) {
@@ -75,7 +77,7 @@ const userLogin = async (req, res, next) => {
       // session-cookie方案
       // 用于判断是否已经成功的登录
       // req.session.account = account
-      // res.setHeader("content-type", "application/json;charset='utf8'")
+      res.setHeader("content-type", "application/json;charset='utf8'")
       res.render("success", {
         data: JSON.stringify({
           message: "恭喜登陆成功！",
@@ -84,20 +86,41 @@ const userLogin = async (req, res, next) => {
         })
       })
     } else {
-      sendMsg()
+      console.log('password error!')
+      sendMsg('Password error!')
     }
   } else {
-    sendMsg()
+    sendMsg('Account is not exited')
   }
-function sendMsg() {
+function sendMsg(msg) {
   res.setHeader("content-type", "application/json; charset=utf-8")
-  res.render("success", {
+  res.render("errorLogin", {
     data: JSON.stringify({
-      message: JSON.stringify("account is not exited"),
+      message: msg,
       date: dateFormat(),
     })
   })
 }
+}
+
+const setEmail = async (req, res, next) => {
+  let { email, account } = req.body;
+  updateEmailByAccount(account,email).then(()=>{
+    res.setHeader("content-type", "application/json; charset=utf-8")
+    res.json({
+      "code": 20000,
+      "message": "Success",
+      "data": {
+        'email': email
+      }
+    })
+  }).catch(()=>{
+    res.setHeader("content-type", "application/json; charset=utf-8")
+    res.json({
+      "code": 40100,
+      "message": "Error"
+    })
+  })
 }
 
 /**
@@ -111,7 +134,7 @@ function sendMsg() {
  */
 const userSingout = async (req, res, next) => {
   req.session = null;
-  // res.setHeader("content-type", "application/json;charset='utf8'")
+  res.setHeader("content-type", "application/json;charset='utf8'")
   res.render("success", {
     data: JSON.stringify({
       message: "已退出登录！",
@@ -201,5 +224,6 @@ module.exports = {
   userList,
   modifyUserInfo,
   deleteUser,
-  getUserAuth
+  getUserAuth,
+  setEmail
 }
