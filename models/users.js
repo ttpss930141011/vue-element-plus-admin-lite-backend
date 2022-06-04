@@ -33,9 +33,12 @@ const isExit = async (account) => {
   return !!await Users.findOne({ account: account })
 }
 
-const getPwdByAccount = async (account) => {
-  return await Users.findOne({ account: account }).exec();
+const getPwdAndEmailByAccount = async (account) => {
+  const result = await Users.findOne({ account: account }).exec();
+  // console.log(result);
+  return result
 }
+
 
 const updateEmailByAccount = async (account,email) => await Users.updateOne({account:account},{$set: {email: email}})
 
@@ -84,7 +87,7 @@ const checkUserAuth = async (account) => {
 module.exports = {
   signup,
   isExit,
-  getPwdByAccount,
+  getPwdAndEmailByAccount,
   findList,
   modifyUserInfoById,
   deleteUserById,

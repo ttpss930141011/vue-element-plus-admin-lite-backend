@@ -1,7 +1,7 @@
 const {
   signup,
   isExit,
-  getPwdByAccount,
+  getPwdAndEmailByAccount,
   findList,
   modifyUserInfoById,
   deleteUserById,
@@ -42,6 +42,10 @@ const userRegister = async (req, res, next) => {
         message: `用户${account}已注册成功`,
         token: token,
         name: account,
+        roles: ['editor'],
+        introduction: 'I am an editor',
+        avatar:
+          'https://wpimg.wallstcn.com/007ef517-bafd-4066-aae4-6883632d9646',
         date: dateFormat()
       })
     })
@@ -66,24 +70,46 @@ const userLogin = async (req, res, next) => {
   }
   // 用户名存在，则匹配账号密码
   if (isAlreadyExit) {
-    const { password: passwordInDB } = await getPwdByAccount(account);
+    const { password: passwordInDB, email: email } = await getPwdAndEmailByAccount(account);
+    console.log('userLogin',passwordInDB,email)
     // 2. 看密码是否正确
     const allowLogin = !! await checkPassword(password, passwordInDB)
     if (allowLogin) {
       // token 方案
       const token = sign(account);
       res.setHeader("X-Token", token);
-
-      // session-cookie方案
-      // 用于判断是否已经成功的登录
-      // req.session.account = account
-      res.setHeader("content-type", "application/json;charset='utf8'")
-      res.render("success", {
-        data: JSON.stringify({
-          message: "恭喜登陆成功！",
+      //3. 看是否為admin
+      const { isExit , isAdmin} = await checkUserAuth(account);
+      console.log('userLogin',isExit,isAdmin);
+      let data = {};
+      if(isExit && isAdmin){
+        data = {
+          emailIsExist: !!email, 
+          message: "userLogin成功！",
+          roles: ['admin'],
+          introduction: 'I am a super administrator',
+          avatar:
+            'https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif',
+          name: account,
           token: token,
           date: dateFormat()
-        })
+        }
+      }else{
+        data = {
+          emailIsExist: !!email, 
+          message: "userLogin成功！",
+          roles: ['editor'],
+          introduction: 'I am an editor',
+          avatar:
+            'https://wpimg.wallstcn.com/007ef517-bafd-4066-aae4-6883632d9646',
+          name: account,
+          token: token,
+          date: dateFormat()
+        }
+      }
+      res.setHeader("content-type", "application/json;charset='utf8'")
+      res.render("success", {
+        data: JSON.stringify(data)
       })
     } else {
       console.log('password error!')
@@ -209,11 +235,32 @@ const deleteUser = async (req, res) => {
 }
 const getUserAuth = async (req, res) => {
   const { token } = req.query;
+  const { account } = req.body;
+  const { isExit , isAdmin} = await checkUserAuth(account);
+  let data = {};
+  if(isExit && isAdmin){
+    data = {
+      message: "getUserAuth成功！",
+      roles: ['admin'],
+      introduction: 'I am a super administrator',
+      avatar:
+        'https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif',
+      name: account,
+      date: dateFormat()
+    }
+  }else{
+    data = {
+      message: "getUserAuth成功！",
+      roles: ['editor'],
+      introduction: 'I am an editor',
+      avatar:
+        'https://wpimg.wallstcn.com/007ef517-bafd-4066-aae4-6883632d9646',
+      name: account,
+      date: dateFormat()
+    }
+  }
   res.render("success", {
-    data: JSON.stringify({
-      code: 20000,
-      data: token
-    })
+    data: JSON.stringify(data)
   })
 }
 

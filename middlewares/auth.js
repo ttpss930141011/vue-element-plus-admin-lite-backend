@@ -7,6 +7,7 @@ const auth = async (req, res, next) => {
     if (!isValid) {
       resignin()
     }{
+      req.body.account = result;
       next()
     }
     // const { isExit, isAdmin } = await checkUserAuth(result);
